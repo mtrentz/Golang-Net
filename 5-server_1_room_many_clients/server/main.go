@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 	"sync"
 )
 
@@ -24,9 +25,8 @@ func (chat *Chat) insertMessage(msg string) {
 func handleConn(conn net.Conn) {
 	defer conn.Close()
 
-	// When connection is open, I'll store the
-	// amount of msgs the Chat had
-	// when the user first connected
+	// When connection is open, I'll store the amount of msgs
+	// the Chat had when the user first connected
 	n := chat.n
 
 	go func() {
@@ -34,15 +34,13 @@ func handleConn(conn net.Conn) {
 		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
 			line := scanner.Text()
-			// fmt.Println("Received: ", line)
-
 			// Case got a new line, add it to chat
 			chat.insertMessage(line)
 		}
 	}()
 
 	for {
-		// Now I want to send all "new" messages
+		// Now I want to send all messages
 		// to client every time that the Chat changes
 		c.L.Lock()
 		for chat.n == n {
@@ -50,16 +48,17 @@ func handleConn(conn net.Conn) {
 			c.Wait()
 		}
 
-		// Send all new messages to client
-		for _, msg := range chat.messages {
-			io.WriteString(conn, msg+"\n")
-		}
+		// Send all messages to client as a single string.
+		// Separate them by 3 pipes |
+		msgs := strings.Join(chat.messages, "|||")
+
+		io.WriteString(conn, msgs+"\n")
+
 		// Update the amount of msgs the Chat had
 		n = chat.n
 
 		c.L.Unlock()
 	}
-
 }
 
 var chat Chat
