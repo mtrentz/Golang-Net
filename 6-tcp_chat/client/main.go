@@ -11,8 +11,9 @@ import (
 )
 
 func prepareMsg(username string, message string) string {
-	// Separated as a function to maybe add datetime later
-	return username + ": " + message + "\n"
+	// This will be sent like this to the server, which will "decode" it properly
+	msg := fmt.Sprintf("%s*|*%s\n", username, message)
+	return msg
 }
 
 func main() {
@@ -38,11 +39,10 @@ func main() {
 				line := scanner.Text()
 				// Clears the terminal
 				fmt.Print("\033[H\033[2J")
-				fmt.Println(line)
 				// I receive all msgs as a single string separated by "|||",
 				// So I'll replace by a newline to print to terminal
-				line = strings.Replace(line, "|||", "\n", -1)
-				fmt.Println(line)
+				formatted := strings.Replace(line, "|||", "\n", -1)
+				fmt.Println(formatted)
 				// Prints the prompt, to stay at the bottom of terminal
 				fmt.Print("Enter your message: ")
 			}
