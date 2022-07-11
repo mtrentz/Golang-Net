@@ -38,7 +38,6 @@ func main() {
 				line := scanner.Text()
 				// Clears the terminal
 				fmt.Print("\033[H\033[2J")
-				fmt.Println(line)
 				// I receive all msgs as a single string separated by "|||",
 				// So I'll replace by a newline to print to terminal
 				line = strings.Replace(line, "|||", "\n", -1)
