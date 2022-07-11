@@ -162,24 +162,36 @@ func handleConn(conn net.Conn) {
 				cmds := strings.Fields(msg[1:])
 
 				if cmds[0] == "create" {
+					// Check if has a next argument
+					if len(cmds) <= 1 {
+						io.WriteString(conn, "No room name provided."+"\n")
+						continue
+					}
 					// Create the room, and assign the room to this user
 					var err error
 					room, err = cr.createRoom(cmds[1])
 					if err != nil {
-						fmt.Printf("Error creating room: %s|||", err)
+						io.WriteString(conn, fmt.Sprintf("Error creating room: %s\n", err)+"\n")
 						// Set room to an empty room
 						room = &Room{}
+						continue
 					}
 				} else if cmds[0] == "join" {
+					// Check if has a next argument
+					if len(cmds) <= 1 {
+						io.WriteString(conn, "No room name provided."+"\n")
+						continue
+					}
 					// Join the room, and assign the room to this user
 					var err error
 					room, err = cr.findRoom(cmds[1])
 					if err != nil {
-						fmt.Printf("Error joining room: %s|||", err)
+						io.WriteString(conn, fmt.Sprintf("Error joining room: %s\n", err)+"\n")
+						continue
 					}
 				} else if cmds[0] == "leave" {
 					room = &Room{}
-					io.WriteString(conn, "Left the room|||")
+					io.WriteString(conn, "Left the room\n")
 				} else if cmds[0] == "list" {
 					// Listing all rooms will remove the user from the room
 					// if he is in one. This is done because otherwise
@@ -199,9 +211,14 @@ func handleConn(conn net.Conn) {
 						roomInfoStr = roomInfoStr[:len(roomInfoStr)-3]
 					}
 
-					io.WriteString(conn, roomInfoStr+"|||")
+					// Check if there is a room
+					if roomInfoStr == "" {
+						io.WriteString(conn, "There are no rooms yet!"+"\n")
+					} else {
+						io.WriteString(conn, roomInfoStr+"\n")
+					}
 				} else {
-					io.WriteString(conn, "Command not recognized|||")
+					fmt.Println("There seems to be a command missing... Received:", msg)
 				}
 			} else if room.name != "" {
 				// Empty room name means no room,
@@ -212,7 +229,7 @@ func handleConn(conn net.Conn) {
 			} else {
 				// If not in a room and not a command,
 				// send msg to user to ask to join a room
-				io.WriteString(conn, "You're not in a room, please join or create one.|||")
+				io.WriteString(conn, "You're not in a room, please join or create one.\n")
 			}
 		}
 	}()
